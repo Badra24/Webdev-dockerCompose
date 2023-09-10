@@ -1,0 +1,37 @@
+version: "3"
+services:
+  flask-psql:
+    image: postgres:14.9
+    container_name: flask-psql
+    restart: always
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - pnet-app
+    volumes:
+      - data-psql:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  flask-app:
+    build: .
+    image: compose-flask-app:1.0
+    container_name: flask-app
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_URL=postgresql://postgres:mypassword@flask-psql/psql
+    depends_on:
+      - flask-psql
+    networks:
+      - pnet-app
+
+networks:
+  pnet-app:
+
+volumes:
+  data-psql:
